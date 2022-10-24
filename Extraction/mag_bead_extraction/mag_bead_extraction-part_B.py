@@ -13,7 +13,7 @@ metadata = {'apiLevel': '2.8',
 
 # Set to `True` to perform a short run, with brief pauses and only
 # one column of samples
-test_run = False
+test_run = True
 
 if test_run:
     pause_bind = 5*60
@@ -36,7 +36,7 @@ else:
 
 # Lysate transfer volume
 
-lysate_vol = 950
+lysate_vol = 425
 
 wash_vol = 800
 
@@ -46,6 +46,8 @@ elute_vol = 100
 
 eth_well_vol = 20000
 
+hyb_well_vol = 20000
+
 # define magnet engagement height for plates
 # (none if using labware with built-in specs)
 mag_engage_height = 4
@@ -53,10 +55,7 @@ mag_engage_height = 4
 
 # REAGENTS plate:
 # Bead columns
-bead_cols = ['A1']
-
-# Hyb Buffer cols
-hyb_cols = ['A2', 'A3', 'A4']
+bead_cols = ['A1','A2', 'A3', 'A4']
 
 # Elute col
 elute_col = 'A8'
@@ -89,16 +88,16 @@ def run(protocol: protocol_api.ProtocolContext):
     # define deck positions and labware
 
     # define hardware modules
-    magblock = protocol.load_module('magnetic module gen2', 10)
+    magblock = protocol.load_module('magnetic module gen2', 6)
     magblock.disengage()
 
     # tips
     tiprack_buffers = protocol.load_labware('opentrons_96_tiprack_300ul',
-                                            5)
+                                            7)
     tiprack_elution = protocol.load_labware(
-                            'opentrons_96_filtertiprack_200ul', 6)
+                            'opentrons_96_filtertiprack_200ul', 4)
     tiprack_wash1 = protocol.load_labware('opentrons_96_tiprack_300ul',
-                                          11)
+                                          5)
     tiprack_wash2 = protocol.load_labware('opentrons_96_tiprack_300ul',
                                           8)
     # tiprack_wash3 = protocol.load_labware('opentrons_96_tiprack_300ul',
@@ -110,12 +109,14 @@ def run(protocol: protocol_api.ProtocolContext):
     wash_buffers = protocol.load_labware('usascientific_12_reservoir_22ml',
                                          1, 'wash buffers')
     eluate = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
-                                   3, 'eluate')
+                                   10, 'eluate')
     waste = protocol.load_labware('nest_1_reservoir_195ml',
-                                  7, 'liquid waste')
+                                  9, 'liquid waste')
     reagents = protocol.load_labware('usascientific_12_reservoir_22ml',
                                      2, 'reagents')
 
+    samples = protocol.load_labware('vwr_96_wellplate_1000ul',
+                                     3, 'samples')
     # load plate on magdeck
     # mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
     mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
@@ -127,9 +128,6 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # SeraMag bead wells
     bead_wells = [reagents[x] for x in bead_cols]
-
-    # 2.5X hyb buffer wells
-    hyb_wells = [reagents[x] for x in hyb_cols]
 
     # Ethanol columns
     eth_wells = [wash_buffers[x] for x in eth_cols]
@@ -147,32 +145,31 @@ def run(protocol: protocol_api.ProtocolContext):
 
     ### Adding beads
 
+    hyb_vol = 0.66 * lysate_vol
 
     # add beads
-    pipette_left.distribute(100,
-                            bead_wells, 
-                            [mag_plate[x].top() for x in cols],
-                            mix_before=(6, 200),
-                            blow_out=True,
-                            blowout_location='source well',
-                            disposal_volume=10,
-                            air_gap=5
-                            )
-
-    # add binding buffer
-
-    hyb_vol = 0.66 * lysate_vol - 100
-
-    hyb_remaining, hyb_wells = add_buffer(pipette_left,
-                                          hyb_wells,
-                                          mag_plate,
-                                          cols,
-                                          hyb_vol,
-                                          eth_well_vol/8)
+    bead_remaining, bead_wells = add_buffer(pipette_left,
+                                            bead_wells,
+                                            mag_plate,
+                                            cols,
+                                            hyb_vol,
+                                            hyb_well_vol/8,
+                                            pre_mix=5)
 
     # iterate to next full well
-    if hyb_remaining < eth_well_vol:
-        hyb_wells.pop(0)
+    if bead_remaining < hyb_well_vol:
+        bead_wells.pop(0)
+
+    # add samples
+    for col in cols:
+        pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
+        pipette_left.transfer(lysate_vol,
+                              samples.wells_by_name()[col],
+                              mag_plate.wells_by_name()[col],
+                              rate=1,
+                              air_gap=5,
+                              new_tip='never')
+        pipette_left.return_tip()
 
     # ### Prompt user to place plate on rotator
     protocol.pause('Seal plate and place on rotator. Rotate at low '
@@ -189,7 +186,64 @@ def run(protocol: protocol_api.ProtocolContext):
 
     protocol.delay(seconds=pause_mag)
 
+    # remove supernatant
+    remove_supernatant(pipette_left,
+                       mag_plate,
+                       cols,
+                       tiprack_wash1,
+                       waste['A1'],
+                       super_vol=lysate_vol,
+                       tip_vol=300,
+                       rate=bead_flow,
+                       bottom_offset=1,
+                       drop_tip=False)
+
+
+    # add beads
+    bead_remaining, bead_wells = add_buffer(pipette_left,
+                                            bead_wells,
+                                            mag_plate,
+                                            cols,
+                                            hyb_vol,
+                                            hyb_well_vol/8,
+                                            pre_mix=5)
+
+    # iterate to next full well
+    if bead_remaining < hyb_well_vol:
+        bead_wells.pop(0)
+
+    # add samples
+    for col in cols:
+        pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
+        pipette_left.transfer(lysate_vol,
+                              samples.wells_by_name()[col],
+                              mag_plate.wells_by_name()[col],
+                              rate=1,
+                              air_gap=5,
+                              new_tip='never')
+        pipette_left.return_tip()
+
+
+
+    # ### Prompt user to place plate on rotator
+    protocol.pause('Seal plate and place on rotator. Rotate at low '
+                   'speed for 10 minutes.')
+
+    protocol.delay(seconds=1)
+
+    protocol.pause('Now spin down plate, unseal, and place back on '
+                   'mag deck.')
+
+    # bind to magnet
+    protocol.comment('Binding beads to magnet.')
+    magblock.engage(height_from_base=mag_engage_height)
+
+    protocol.delay(seconds=pause_mag)
+
+
     pipette_left.default_speed = 400
+
+
 
     # ### Do first wash: Wash 800 µL EtOH
     protocol.comment('Doing wash #3.')
