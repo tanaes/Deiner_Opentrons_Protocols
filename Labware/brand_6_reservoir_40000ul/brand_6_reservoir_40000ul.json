@@ -1,0 +1,134 @@
+{
+    "ordering": [
+        [
+            "A1"
+        ],
+        [
+            "A2"
+        ],
+        [
+            "A3"
+        ],
+        [
+            "A4"
+        ],
+        [
+            "A5"
+        ],
+        [
+            "A6"
+        ]
+    ],
+    "brand": {
+        "brand": "Brand",
+        "brandId": [
+            "701456"
+        ]
+    },
+    "metadata": {
+        "displayName": "Brand 6 Reservoir 40000 µL",
+        "displayCategory": "reservoir",
+        "displayVolumeUnits": "µL",
+        "tags": []
+    },
+    "dimensions": {
+        "xDimension": 128.7,
+        "yDimension": 85,
+        "zDimension": 44
+    },
+    "wells": {
+        "A1": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 19,
+            "y": 42.5,
+            "z": 5
+        },
+        "A2": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 37,
+            "y": 42.5,
+            "z": 5
+        },
+        "A3": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 55,
+            "y": 42.5,
+            "z": 5
+        },
+        "A4": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 73,
+            "y": 42.5,
+            "z": 5
+        },
+        "A5": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 91,
+            "y": 42.5,
+            "z": 5
+        },
+        "A6": {
+            "depth": 39,
+            "totalLiquidVolume": 40000,
+            "shape": "rectangular",
+            "xDimension": 17,
+            "yDimension": 70,
+            "x": 109,
+            "y": 42.5,
+            "z": 5
+        }
+    },
+    "groups": [
+        {
+            "metadata": {
+                "wellBottomShape": "v"
+            },
+            "wells": [
+                "A1",
+                "A2",
+                "A3",
+                "A4",
+                "A5",
+                "A6"
+            ]
+        }
+    ],
+    "parameters": {
+        "format": "irregular",
+        "quirks": [
+            "centerMultichannelOnWells",
+            "touchTipDisabled"
+        ],
+        "isTiprack": false,
+        "isMagneticModuleCompatible": false,
+        "loadName": "brand_6_reservoir_40000ul"
+    },
+    "namespace": "custom_beta",
+    "version": 1,
+    "schemaVersion": 2,
+    "cornerOffsetFromSlot": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+    }
+}

@@ -13,7 +13,7 @@ metadata = {'apiLevel': '2.8',
 
 # Set to `True` to perform a short run, with brief pauses and only
 # one column of samples
-test_run = True
+test_run = False
 
 if test_run:
     pause_bind = 5*60
@@ -44,9 +44,9 @@ elute_vol = 100
 
 # fill volumes
 
-eth_well_vol = 20000
+eth_well_vol = 40000
 
-hyb_well_vol = 20000
+hyb_well_vol = 40000
 
 # define magnet engagement height for plates
 # (none if using labware with built-in specs)
@@ -55,18 +55,16 @@ mag_engage_height = 4
 
 # REAGENTS plate:
 # Bead columns
-bead_cols = ['A1','A2', 'A3', 'A4']
+bead_cols = ['A1']
 
 # Elute col
-elute_col = 'A8'
+elute_col = 'A6'
 
 
 # WASH plate:
 
 # Ethanol columns
-eth_cols = ['A1', 'A2', 'A3', 'A4',
-            'A5', 'A6', 'A7', 'A8',
-            'A9', 'A10']
+eth_cols = ['A1','A2', 'A3', 'A4']
 
 
 # bead aspiration flow rate
@@ -106,14 +104,14 @@ def run(protocol: protocol_api.ProtocolContext):
     #                                       4)
 
     # plates
-    wash_buffers = protocol.load_labware('usascientific_12_reservoir_22ml',
-                                         1, 'wash buffers')
     eluate = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
                                    10, 'eluate')
     waste = protocol.load_labware('nest_1_reservoir_195ml',
                                   9, 'liquid waste')
-    reagents = protocol.load_labware('usascientific_12_reservoir_22ml',
+    reagents = protocol.load_labware('brand_6_reservoir_40000ul',
                                      2, 'reagents')
+    wash = protocol.load_labware('brand_6_reservoir_40000ul',
+                                     1, 'wash buffers')
 
     samples = protocol.load_labware('brand_96_wellplate_1200ul',
                                      3, 'samples')
@@ -130,7 +128,7 @@ def run(protocol: protocol_api.ProtocolContext):
     bead_wells = [reagents[x] for x in bead_cols]
 
     # Ethanol columns
-    eth_wells = [wash_buffers[x] for x in eth_cols]
+    eth_wells = [wash[x] for x in eth_cols]
 
     # ### Prompt user to place plate on mag block
     protocol.pause('Add plate containing 200 µL per well of lysis supernatant'
@@ -156,9 +154,6 @@ def run(protocol: protocol_api.ProtocolContext):
                                             hyb_well_vol/8,
                                             pre_mix=5)
 
-    # iterate to next full well
-    if bead_remaining < hyb_well_vol:
-        bead_wells.pop(0)
 
     # add samples
     for col in cols:
@@ -208,10 +203,6 @@ def run(protocol: protocol_api.ProtocolContext):
                                             hyb_well_vol/8,
                                             pre_mix=5)
 
-    # iterate to next full well
-    if bead_remaining < hyb_well_vol:
-        bead_wells.pop(0)
-
     # add samples
     for col in cols:
         pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
@@ -246,7 +237,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
 
     # ### Do first wash: Wash 800 µL EtOH
-    protocol.comment('Doing wash #3.')
+    protocol.comment('Doing wash #1.')
     eth_remaining, eth_wells = bead_wash(
                                        # global arguments
                                        protocol,
@@ -277,13 +268,13 @@ def run(protocol: protocol_api.ProtocolContext):
                                        mag_engage_height=mag_engage_height)
 
     # iterate to next full well
-    if eth_remaining < eth_well_vol:
-        eth_wells.pop(0)
+    # if eth_remaining < eth_well_vol:
+    #     eth_wells.pop(0)
 
     protocol.pause('Replace empty tip box in position 9 with new tips.')
 
     # ### Do second wash: Wash 800 µL EtOH
-    protocol.comment('Doing wash #4.')
+    protocol.comment('Doing wash #2.')
     eth_remaining, eth_wells = bead_wash(
                                        # global arguments
                                        protocol,
