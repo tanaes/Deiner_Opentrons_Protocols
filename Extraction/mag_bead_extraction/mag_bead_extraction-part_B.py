@@ -115,11 +115,11 @@ def run(protocol: protocol_api.ProtocolContext):
     reagents = protocol.load_labware('usascientific_12_reservoir_22ml',
                                      2, 'reagents')
 
-    samples = protocol.load_labware('vwr_96_wellplate_1000ul',
+    samples = protocol.load_labware('brand_96_wellplate_1200ul',
                                      3, 'samples')
     # load plate on magdeck
     # mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
-    mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
+    mag_plate = magblock.load_labware('brand_96_wellplate_1200ul')
 
     # initialize pipettes
     pipette_left = protocol.load_instrument('p300_multi_gen2',
