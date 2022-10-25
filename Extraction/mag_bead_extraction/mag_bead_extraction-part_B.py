@@ -130,13 +130,6 @@ def run(protocol: protocol_api.ProtocolContext):
     # Ethanol columns
     eth_wells = [wash[x] for x in eth_cols]
 
-    # ### Prompt user to place plate on mag block
-    protocol.pause('Add plate containing 200 µL per well of lysis supernatant'
-                   ' onto the magdeck in position 10.')
-
-    # ### Add MagBinding buffer and beads to plate
-    protocol.comment('Adding beads to plate.')
-
     # temporarily decrease movement speed to minimize mess
     pipette_left.default_speed = 200
 
@@ -145,14 +138,23 @@ def run(protocol: protocol_api.ProtocolContext):
 
     hyb_vol = 0.66 * lysate_vol
 
+    bead_mix(pipette_left,
+             reagents,
+             bead_cols,
+             None,
+             n=10,
+             z_offset=2,
+             mix_vol=300,
+             mix_lift=20,
+             drop_tip=True)
+
     # add beads
     bead_remaining, bead_wells = add_buffer(pipette_left,
                                             bead_wells,
                                             mag_plate,
                                             cols,
                                             hyb_vol,
-                                            hyb_well_vol/8,
-                                            pre_mix=5)
+                                            hyb_well_vol/8)
 
 
     # add samples
@@ -193,6 +195,15 @@ def run(protocol: protocol_api.ProtocolContext):
                        bottom_offset=1,
                        drop_tip=False)
 
+    bead_mix(pipette_left,
+             reagents,
+             bead_cols,
+             None,
+             n=10,
+             z_offset=2,
+             mix_vol=300,
+             mix_lift=20,
+             drop_tip=True)
 
     # add beads
     bead_remaining, bead_wells = add_buffer(pipette_left,
@@ -271,7 +282,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # if eth_remaining < eth_well_vol:
     #     eth_wells.pop(0)
 
-    protocol.pause('Replace empty tip box in position 9 with new tips.')
+    # protocol.pause('Replace empty tip box in position 9 with new tips.')
 
     # ### Do second wash: Wash 800 µL EtOH
     protocol.comment('Doing wash #2.')
@@ -315,7 +326,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # - trash tip
     # - leave magnet engaged
 
-    protocol.pause('Replace empty tip box in position 4 with new tips.')
+    # protocol.pause('Replace empty tip box in position 4 with new tips.')
 
     # remove supernatant
     remove_supernatant(pipette_left,
