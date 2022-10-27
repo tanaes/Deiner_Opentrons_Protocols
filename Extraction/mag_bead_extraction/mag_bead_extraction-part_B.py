@@ -13,7 +13,7 @@ metadata = {'apiLevel': '2.8',
 
 # Set to `True` to perform a short run, with brief pauses and only
 # one column of samples
-test_run = True
+test_run = False
 
 if test_run:
     pause_bind = 5
@@ -30,15 +30,18 @@ else:
     pause_elute = 5*60
 
     # Limit columns
-    cols = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6',
-            'A7', 'A8', 'A9', 'A10', 'A11', 'A12']
+    cols = ['A1']
+    # cols = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6',
+    #         'A7', 'A8', 'A9', 'A10', 'A11', 'A12']
 
 
 # Lysate transfer volume
 
 lysate_vol = 425
 
-wash_vol = 800
+wash_vol = 290
+
+rinse_vol = 800
 
 elute_vol = 100
 
@@ -151,31 +154,35 @@ def run(protocol: protocol_api.ProtocolContext):
     # add beads
     bead_remaining, bead_wells = add_buffer(pipette_left,
                                             bead_wells,
-                                            mag_plate,
+                                            samples,
                                             cols,
                                             hyb_vol,
                                             hyb_well_vol/8)
 
 
+    # ### Prompt user to place plate on rotator
+    protocol.pause('Seal sample plate and place on rotator. Rotate at low '
+                   'speed for 10 minutes.')
+
+    protocol.delay(seconds=1)
+
+    protocol.pause('Now spin down plate, unseal, and place back on '
+                   'position 3.')
+
+
     # add samples
+
+    subset_vol = (lysate_vol+hyb_vol)/2
+
     for col in cols:
         pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
-        pipette_left.transfer(lysate_vol,
+        pipette_left.transfer(subset_vol,
                               samples.wells_by_name()[col],
                               mag_plate.wells_by_name()[col],
                               rate=1,
                               air_gap=5,
                               new_tip='never')
         pipette_left.return_tip()
-
-    # ### Prompt user to place plate on rotator
-    protocol.pause('Seal plate and place on rotator. Rotate at low '
-                   'speed for 10 minutes.')
-
-    protocol.delay(seconds=1)
-
-    protocol.pause('Now spin down plate, unseal, and place back on '
-                   'mag deck.')
 
     # bind to magnet
     protocol.comment('Binding beads to magnet.')
@@ -189,62 +196,61 @@ def run(protocol: protocol_api.ProtocolContext):
                        cols,
                        tiprack_wash1,
                        waste['A1'],
-                       super_vol=lysate_vol,
+                       super_vol=subset_vol,
                        tip_vol=300,
                        rate=bead_flow,
                        bottom_offset=1,
                        drop_tip=False)
 
-    bead_mix(pipette_left,
-             reagents,
-             bead_cols,
-             None,
-             n=10,
-             z_offset=2,
-             mix_vol=300,
-             mix_lift=20,
-             drop_tip=True)
-
-    # add beads
-    bead_remaining, bead_wells = add_buffer(pipette_left,
-                                            bead_wells,
-                                            mag_plate,
-                                            cols,
-                                            hyb_vol,
-                                            hyb_well_vol/8)
-
     # add samples
     for col in cols:
         pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
-        pipette_left.transfer(lysate_vol,
+        pipette_left.transfer(subset_vol,
                               samples.wells_by_name()[col],
                               mag_plate.wells_by_name()[col],
                               rate=1,
+                              mix_before=(2,200),
                               air_gap=5,
                               new_tip='never')
         pipette_left.return_tip()
 
-
-
-    # ### Prompt user to place plate on rotator
-    protocol.pause('Seal plate and place on rotator. Rotate at low '
-                   'speed for 10 minutes.')
-
-    protocol.delay(seconds=1)
-
-    protocol.pause('Now spin down plate, unseal, and place back on '
-                   'mag deck.')
-
-    # bind to magnet
-    protocol.comment('Binding beads to magnet.')
-    magblock.engage(height_from_base=mag_engage_height)
-
     protocol.delay(seconds=pause_mag)
 
+
+    # remove supernatant
+    remove_supernatant(pipette_left,
+                       mag_plate,
+                       cols,
+                       tiprack_wash1,
+                       waste['A1'],
+                       super_vol=subset_vol,
+                       tip_vol=300,
+                       rate=bead_flow,
+                       bottom_offset=1,
+                       drop_tip=True)
 
     pipette_left.default_speed = 400
 
 
+    # Rinse well with ethanol
+
+    eth_remaining, eth_wells = add_buffer(pipette_left,
+                                          eth_wells,
+                                          mag_plate,
+                                          cols,
+                                          rinse_vol,
+                                          eth_well_vol/8)
+
+    remove_supernatant(pipette_left,
+                       mag_plate,
+                       cols,
+                       tiprack_wash2,
+                       waste['A1'],
+                       super_vol=rinse_vol,
+                       tip_vol=300,
+                       rate=bead_flow,
+                       bottom_offset=1,
+                       drop_tip=False)
 
     # ### Do first wash: Wash 800 µL EtOH
     protocol.comment('Doing wash #1.')
@@ -257,7 +263,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        cols,
                                        # super arguments
                                        waste['A1'],
-                                       tiprack_wash1,
+                                       tiprack_wash2,
                                        # wash buffer arguments
                                        eth_wells,
                                        eth_well_vol/8,
@@ -273,6 +279,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        rate=0.25,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix,
+                                       mix_vol=290,
                                        mix_lift=12,
                                        remaining=None,
                                        mag_engage_height=mag_engage_height,
@@ -311,6 +318,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        rate=0.25,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix,
+                                       mix_vol=290,
                                        mix_lift=12,
                                        remaining=eth_remaining,
                                        mag_engage_height=mag_engage_height,
