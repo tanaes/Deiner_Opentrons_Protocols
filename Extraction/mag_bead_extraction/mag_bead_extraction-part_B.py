@@ -89,7 +89,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # define deck positions and labware
 
     # define hardware modules
-    magblock = protocol.load_module('magnetic module gen2', 6)
+    magblock = protocol.load_module('magnetic module', 6)
     magblock.disengage()
 
     # tips
@@ -248,7 +248,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        waste['A1'],
                        super_vol=rinse_vol,
                        tip_vol=300,
-                       rate=bead_flow,
+                       rate=1,
                        bottom_offset=1,
                        drop_tip=False)
 
@@ -275,8 +275,8 @@ def run(protocol: protocol_api.ProtocolContext):
                                        super_vol=wash_vol,
                                        super_tip_vol=300,
                                        super_blowout=False,
-                                       drop_super_tip=True,
-                                       rate=0.25,
+                                       drop_super_tip=False,
+                                       rate=1,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix,
                                        mix_vol=290,
@@ -315,7 +315,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        super_tip_vol=300,
                                        super_blowout=True,
                                        drop_super_tip=False,
-                                       rate=0.25,
+                                       rate=1,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix,
                                        mix_vol=290,
