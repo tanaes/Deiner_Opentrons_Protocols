@@ -9,10 +9,10 @@ metadata = {
 # Define parameters for protocol
 
 # Quantity of supernatant to transfer
-quantity = 900
+quantity = 450
 
 # Height below the top of source tube to aspirate from
-z_depth = 27
+z_depth = 35
 
 # Rate of aspiration (1 is default for pipette)
 rate = 0.25
@@ -38,8 +38,10 @@ def run(protocol: protocol_api.ProtocolContext):
     tuberack_2 = protocol.load_labware(tuberack_labware, 2)
 
     # plates
-    samples = protocol.load_labware('brand_96_wellplate_1200ul',
-                                    3, 'samples')
+    samples_a = protocol.load_labware('brand_96_wellplate_1200ul',
+                                    3, 'samples_a')
+    samples_b = protocol.load_labware('brand_96_wellplate_1200ul',
+                                    9, 'samples_b')
 
     # initialize pipettes
     pipette = protocol.load_instrument('p300_single_gen2',
@@ -73,7 +75,7 @@ def run(protocol: protocol_api.ProtocolContext):
         # quadrants of the destination plate, for a 1:1 spatial relationship
         # between the tubes on the deck and the wells in the destination plate.
 
-        d_rows = [c[i:j] for c in samples.columns()]
+        d_rows = [c[i:j] for c in samples_a.columns()]
         d_wells = list(chain(*d_rows[a:b]))
         
         s_wells = rack.wells()
@@ -87,18 +89,31 @@ def run(protocol: protocol_api.ProtocolContext):
                           if int(y.display_name[1:3].strip()) in cols]        
 
         s_wells_filtered = [x for x, y in pairs_filtered]
-        d_wells_filtered = [y for x, y in pairs_filtered]
+        da_wells_filtered = [y for x, y in pairs_filtered]
+        db_wells_filtered = [samples_b.wells_by_name()[x.well_name] for x in da_wells_filtered]
+
         
         if not s_wells_filtered:
             continue
 
-        for (source, destination) in zip(s_wells_filtered, d_wells_filtered):
+        for (source, d_a, d_b) in zip(s_wells_filtered,
+                                      da_wells_filtered,
+                                      db_wells_filtered):
            
             pipette.pick_up_tip()
            
             pipette.transfer(quantity,
                              source.top(z=-z_depth),
-                             destination.top(z=-3),
+                             d_a.top(z=-3),
+                             new_tip='never',
+                             rate=rate,
+                             touch_tip=True,
+                             air_gap=10,
+                             trash=True)
+
+            pipette.transfer(quantity,
+                             source.top(z=-z_depth),
+                             d_b.top(z=-3),
                              new_tip='never',
                              rate=rate,
                              touch_tip=True,
