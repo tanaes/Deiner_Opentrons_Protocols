@@ -75,6 +75,9 @@ eth_cols = ['A1','A2', 'A3', 'A4']
 # bead aspiration flow rate
 bead_flow = .25
 
+# bead mix flow rate
+mix_rate = 2
+
 # wash mix mutliplier
 wash_mix = 5
 
@@ -151,6 +154,7 @@ def run(protocol: protocol_api.ProtocolContext):
              z_offset=2,
              mix_vol=300,
              mix_lift=20,
+             mix_rate=mix_rate,
              drop_tip=True)
 
     # add beads
@@ -248,7 +252,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        cols,
                        tiprack_wash2,
                        waste['A1'],
-                       super_vol=rinse_vol,
+                       super_vol=rinse_vol - wash_vol,
                        tip_vol=300,
                        rate=1,
                        bottom_offset=1,
@@ -283,6 +287,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        mix_n=wash_mix,
                                        mix_vol=290,
                                        mix_lift=0,
+                                       mix_rate=mix_rate,
                                        remaining=None,
                                        mag_engage_height=mag_engage_height,
                                        pause_s=pause_eth_bind)
@@ -322,6 +327,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                        mix_n=wash_mix,
                                        mix_vol=290,
                                        mix_lift=0,
+                                       mix_rate=mix_rate,
                                        remaining=eth_remaining,
                                        mag_engage_height=mag_engage_height,
                                        pause_s=pause_eth_bind)
@@ -381,7 +387,10 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
         pipette_left.aspirate(elute_vol, reagents[elute_col], rate=1)
         pipette_left.dispense(elute_vol, mag_plate[col].bottom(z=1))
-        pipette_left.mix(elute_mix_num, elute_vol - 10, mag_plate[col].bottom(z=1))
+        pipette_left.mix(elute_mix_num,
+                         elute_vol - 10,
+                         mag_plate[col].bottom(z=1),
+                         rate=mix_rate)
         pipette_left.blow_out(mag_plate[col].top())
         pipette_left.touch_tip()
         # we'll use these same tips for final transfer
@@ -395,7 +404,10 @@ def run(protocol: protocol_api.ProtocolContext):
     # while t_mix < pause_elute():
     for col in cols:
         pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
-        pipette_left.mix(elute_mix_num, elute_vol - 10, mag_plate[col].bottom(z=1))
+        pipette_left.mix(elute_mix_num,
+                         elute_vol - 10,
+                         mag_plate[col].bottom(z=1),
+                         rate=mix_rate)
         pipette_left.blow_out(mag_plate[col].top())
         pipette_left.touch_tip()
         # we'll use these same tips for final transfer
@@ -415,9 +427,9 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette_left.aspirate(elute_vol,
                               mag_plate[col].bottom(z=2),
                               rate=bead_flow)
-        pipette_left.dispense(elute_vol, eluate[col])
-        pipette_left.blow_out(eluate[col].top())
-        pipette_left.touch_tip()
+        pipette_left.dispense(elute_vol, eluate[col].bottom(z=2))
+        # pipette_left.blow_out(eluate[col].top(z=-1))
+        # pipette_left.touch_tip()
         # we're done with these tips now
         pipette_left.drop_tip()
 
