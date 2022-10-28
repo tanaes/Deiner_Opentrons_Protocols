@@ -57,7 +57,8 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # reagents
     reagents = protocol.load_labware('tubeblockeppendorfstriptube_96_wellplate_250ul',
-                                     11, 'reagents')
+                                     11, 
+                                     'reagents')
 
     # sample plates and tips
 
@@ -70,7 +71,7 @@ def run(protocol: protocol_api.ProtocolContext):
                                               s)
         sample_tips[s] = protocol.load_labware('opentrons_96_filtertiprack_20ul',
                                               sample_plates[s]['tip'],
-                                              s)
+                                              '%s tips' % s)
     for p in pcr_plates:
         pcr_obj[p] = protocol.load_labware(pcr_labware,
                                            pcr_plates[p],
