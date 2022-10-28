@@ -30,9 +30,9 @@ else:
     pause_elute = 7*60
 
     # Limit columns
-    cols = ['A1']
-    # cols = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6',
-    #         'A7', 'A8', 'A9', 'A10', 'A11', 'A12']
+    # cols = ['A1']
+    cols = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6',
+            'A7', 'A8', 'A9', 'A10', 'A11', 'A12']
 
 
 # Lysate transfer volume
@@ -79,7 +79,7 @@ bead_flow = .25
 mix_rate = 2
 
 # wash mix mutliplier
-wash_mix = 5
+wash_mix = 10
 
 
 # function relating volume to liquid height in magplate
