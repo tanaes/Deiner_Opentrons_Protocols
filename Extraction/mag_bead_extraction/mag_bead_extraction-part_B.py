@@ -55,7 +55,7 @@ hyb_well_vol = 40000
 
 # define magnet engagement height for plates
 # (none if using labware with built-in specs)
-mag_engage_height = 5.5
+mag_engage_height = 11
 
 
 # REAGENTS plate:
